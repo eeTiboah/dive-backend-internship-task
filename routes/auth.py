@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from utils.user_utils import create_user
+from utils.user_utils import create_new_user
 from db import models
 from db.database import get_db
 from schema.user import User, Token, UserResponse
@@ -27,7 +27,7 @@ def signup(user: User, db: Session = Depends(get_db)):
 
     """
 
-    user = create_user(user, db)
+    user = create_new_user(user, db)
     return user
 
 
@@ -46,10 +46,10 @@ def login(user: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     
     user_data = db.query(models.User).filter(models.User.email == user.username).first()
     if not user_data:
-        raise UserNotFoundError(error_msg="Invalid Credentials")
+        raise UserNotFoundError(detail="Invalid Credentials")
 
     if not verify_password(user.password, user_data.password):
-        raise ValidationError(error_msg="Invalid credentials")
+        raise ValidationError(detail="Invalid credentials")
 
     token = get_access_token(str(user_data.id))
 
