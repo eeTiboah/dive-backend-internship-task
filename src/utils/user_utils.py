@@ -1,6 +1,10 @@
-from src.core.configvars import EnvConfig
 from src.db import models
-from src.schema.user import User, UserResponse, UserUpdate, UserUpdateResponse, UserPaginatedResponse
+from src.schema.user import (
+    UserResponse,
+    UserUpdate,
+    UserUpdateResponse,
+    UserPaginatedResponse,
+)
 from src.core.exceptions import UserAlreadyExistsError, ValidationError
 from src.db.repository.user import save_user_in_db
 from datetime import datetime
@@ -11,6 +15,7 @@ from sqlalchemy import desc
 
 user_link = "/api/v1/users"
 
+
 def check_for_user(db, user_id):
     """
     Checks for the existence of a user in the database
@@ -19,7 +24,7 @@ def check_for_user(db, user_id):
     user_in_db = db.query(models.User).filter(models.User.id == user_id)
     first_user = user_in_db.first()
     if not first_user:
-        raise NotFoundError(detail=f"User with specified id not found")
+        raise NotFoundError(detail="User not found")
 
     return user_in_db
 
@@ -52,7 +57,6 @@ def get_all_users(db, page, limit):
     Return: The users in the db
 
     """
-
 
     total_users = db.query(models.User).count()
     pages = (total_users - 1) // limit + 1
@@ -96,7 +100,7 @@ def get_all_users(db, page, limit):
         total_pages=pages,
         users_response=users_response,
         links=links,
-        size=limit
+        size=limit,
     )
 
 
@@ -123,12 +127,6 @@ def get_a_user(db, user_id):
     return returned_user
 
 
-"""
- to update a user, you can add the current user as a parameter to the function. check if the current user is an admin and allow
- him to update anything. if it is a manager, only allow it to update users with the user role
-"""
-
-
 def create_new_user(user, db):
     """
     Creates a regular user
@@ -143,7 +141,6 @@ def create_new_user(user, db):
     user_data = db.query(models.User).filter(models.User.email == user.email).first()
     if user_data:
         raise UserAlreadyExistsError(detail="User with email already exists")
-    
 
     hash_passwd = get_password_hash(user.password)
     if user.password != user.password_confirmation:
@@ -194,7 +191,6 @@ def update_existing_user(user_id, user, db, current_user):
     user = user_in_db.first()
 
     return UserUpdateResponse(
-        id=user.id,
         email=user.email,
         first_name=user.first_name,
         last_name=user.last_name,
@@ -218,6 +214,3 @@ def delete_existing_user(user_id, db):
     user_in_db = check_for_user(db, user_id)
     user_in_db.delete()
     db.commit()
-
-
-

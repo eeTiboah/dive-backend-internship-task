@@ -7,7 +7,7 @@ from src.main import app
 from datetime import datetime, time
 from src.db import models
 
-TEST_SQLALCHEMY_DATABASE_URL = f"sqlite:///./test.db"
+TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
 engine = create_engine(
     TEST_SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -56,6 +56,7 @@ def test_user(client):
     assert res.status_code == 201
     new_user = res.json()
     new_user["password"] = user.get("password")
+    new_user["id"] = 1
     return new_user
 
 
@@ -73,6 +74,7 @@ def test_user_1(client):
     assert res.status_code == 201
     new_user = res.json()
     new_user["password"] = user.get("password")
+    new_user["id"] = 2
     return new_user
 
 
