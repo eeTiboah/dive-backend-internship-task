@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from src.utils.user_utils import (
     create_new_user,
+    delete_existing_user,
     get_a_user,
     get_all_users,
+    update_existing_user,
 )
 from src.db import models
 from src.db.database import get_db
@@ -14,6 +16,9 @@ from src.models.user import (
     UserPaginatedResponse,
     UserResponse,
     TokenResponse,
+    UserUpdate,
+    UserUpdateInput,
+    UserUpdateResponse,
 )
 from fastapi.security import OAuth2PasswordRequestForm
 from src.utils.utils import verify_password
@@ -174,3 +179,67 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
     user = get_a_user(db, user_id)
     return user
+
+@auth_router.patch(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserUpdateResponse,
+)
+def update_user(
+    user_id: int,
+    user: UserUpdateInput,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Updates a regular user
+    Query Parameters:
+        user_id: The id of the user to be updated
+        user: User schema that is accepted in request to update user details
+        db: Database session
+        current_user: The currently logged in user
+
+    Return: The newly updated user
+
+    """
+
+    updated_user = update_existing_user(user_id, user, db, current_user)
+    return updated_user
+
+@auth_router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(allow_operation)],
+)
+def delete_user(user_id: int, 
+                  db: Session = Depends(get_db),
+                   current_user=Depends(get_current_user)):
+    """
+    Deletes a regular user
+    Query Parameters:
+        user_id: The id of the user to be updated
+        db: Database session
+
+    Return: Nothing
+
+    """
+
+    delete_existing_user(user_id, db, current_user)
+
+@auth_router.delete(
+    "/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(RoleChecker(["admin"]))],
+)
+def delete_users(db: Session = Depends(get_db)):
+    """
+    Deletes all users
+    Query Parameters:
+        db: Database session
+
+    Return: Nothing
+
+    """
+
+    db.query(models.User).delete()
+    db.commit()

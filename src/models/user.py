@@ -15,11 +15,11 @@ class User(BaseModel):
 
 
 class UserRes(BaseModel):
-    email: Optional[EmailStr] = Field(...)
-    first_name: Optional[str] = Field(...)
-    last_name: Optional[str] = Field(...)
-    role: Role = Field(...)
-    expected_calories: int = Field(...)
+    email: Optional[EmailStr]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    role: Optional[Role]
+    expected_calories: int
 
 class UserResponse(BaseModel):
     data: UserRes = Field(...)
@@ -41,8 +41,17 @@ class UserPaginatedResponse(BaseModel):
     status_code: int = Field(...)
 
 
-class UserUpdate(UserRes):
-    updated_at: datetime.datetime = Field(...)
+class UserUpdateInput(UserRes):
+    pass
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    updated_at: Optional[datetime.datetime]
+    role: Optional[Role]
+    expected_calories: Optional[int]
 
 class UserUpdateResponse(BaseModel):
     data: UserUpdate = Field(...)
@@ -67,7 +76,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr]
     first_name: Optional[str]
     last_name: Optional[str]
-    updated_at: Optional[datetime.datetime]
+    updated_at: datetime.datetime = Field(...)
     role: Optional[Role]
     expected_calories: Optional[int]
 

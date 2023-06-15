@@ -11,7 +11,7 @@ from src.utils.utils import handle_errors
 app = FastAPI()
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 @app.get("/")
 def index():

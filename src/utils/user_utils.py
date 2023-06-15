@@ -5,13 +5,16 @@ from src.models.user import (
     UserPaginate,
     UserPaginatedResponse,
     UserResponse,
-    UserRes
+    UserRes,
+    UserUpdate,
+    UserUpdateResponse
 )
 from src.core.exceptions import ErrorResponse
 from src.db.repository.user import save_user
 from src.utils.utils import get_password_hash
 from src.core.configvars import env_config
 from fastapi import status
+from datetime import datetime
 
 
 def check_for_user(db, user_id):
@@ -33,6 +36,36 @@ def check_for_user(db, user_id):
         )
 
     return user_in_db
+
+def check_user_and_role(db, user_id, current_user, msg):
+    """
+    Checks for the existence and role of a user
+    Args:
+        db: Database session
+        user_id: The id of the user
+
+    Return: A user query
+    """
+    user = check_for_user(db, user_id)
+    first_user = user.first()
+
+    if current_user.role.name == "admin":
+        return user
+    
+    elif current_user.id == first_user.id:
+        return user
+
+    elif current_user.role.name == "manager":
+        if first_user.role.name == "user":
+            return user
+        else:
+            raise ErrorResponse(
+                    data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
+                )
+    else:
+        raise ErrorResponse(
+                    data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
+                )
 
 
 
@@ -157,3 +190,68 @@ def get_a_user(db, user_id):
         expected_calories=user.expected_calories,
     )
     return UserResponse(data=returned_user, errors=[], status_code=200)
+
+
+def update_existing_user(user_id, user, db, current_user):
+    """
+    Updates a regular user
+    Args:
+        user_id: The id of the user to be updated
+        user: User schema that is accepted in request to update user details
+        db: Database session
+
+    Return: The newly updated user
+
+    """
+    user_in_db = check_user_and_role(
+        db, user_id, current_user, env_config.ERRORS.get("NOT_PERMITTED_UPDATE_USER")
+    )
+    current_time = datetime.utcnow()
+    updated_user = UserUpdate(
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        updated_at=current_time,
+        role=user.role,
+        expected_calories=user.expected_calories,
+    )
+    user_dict = updated_user.dict()
+    new_update = {k: v for k, v in user_dict.items() if v is not None}
+
+    user_in_db.update(new_update)
+    db.commit()
+
+    user = user_in_db.first()
+    response = UserUpdate(
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        updated_at=current_time,
+        role=user.role,
+        expected_calories=user.expected_calories,
+    )
+
+    return UserUpdateResponse(data=response, errors=[], status_code=200)
+
+
+def delete_existing_user(user_id, db, current_user):
+    """
+    Deletes a regular user
+    Args:
+        user_id: The id of the user to be updated
+        db: Database session
+
+    Return: Nothing
+
+    """
+
+    user_in_db = check_for_user(db, user_id)
+    user = user_in_db.first()
+    if current_user.role.name == "manager":
+        if user.role.name == "admin" or user.role.name == "manager":
+            raise ErrorResponse(
+                    data=[], errors=[{"message": env_config.ERRORS.get("NOT_PERMITTED_DELETE_USER")}], status_code=status.HTTP_403_FORBIDDEN
+                )
+
+    user_in_db.delete()
+    db.commit()
