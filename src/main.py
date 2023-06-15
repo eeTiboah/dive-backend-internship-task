@@ -5,6 +5,7 @@ from src.core.request_exception import RequestException
 from src.core.exceptions import ErrorResponse
 from fastapi.responses import JSONResponse
 from src.routes.auth import auth_router
+from src.routes.calories import calorie_router
 from fastapi.exceptions import RequestValidationError
 from src.utils.utils import handle_errors
 
@@ -39,3 +40,4 @@ async def http_exception_handler(request: Request, exc: ErrorResponse):
 app.add_exception_handler(ErrorResponse, http_exception_handler)
 
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(calorie_router, prefix="/api/v1")

@@ -48,5 +48,5 @@ class CalorieEntry(Base):
     is_below_expected = Column(Boolean, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("User", back_populates="calorie_entries")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    user = relationship("User", back_populates="calorie_entries", passive_deletes=True)
