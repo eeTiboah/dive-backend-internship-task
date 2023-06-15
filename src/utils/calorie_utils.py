@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from src.models.calories import Calorie, CalorieResponse, CalorieUpdate
 from src.db import models
@@ -19,6 +18,7 @@ def get_total_number_of_calories(db, current_user, date):
     )
 
     return total_calories_today
+
 
 def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
     """
@@ -50,7 +50,6 @@ def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
         )
 
     return calorie_entry
-
 
 
 def update_calorie_entry(calorie_id, calorie_entry, db, current_user):
@@ -117,11 +116,8 @@ def update_calorie_entry(calorie_id, calorie_entry, db, current_user):
         is_below_expected=updated_calorie_entry.is_below_expected,
     )
 
-    return CalorieResponse(
-        data=response,
-        errors=[],
-        status_code=200
-    )
+    return CalorieResponse(data=response, errors=[], status_code=200)
+
 
 def delete_calorie_entry(db, calorie_id, current_user):
     """

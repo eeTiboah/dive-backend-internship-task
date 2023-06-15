@@ -19,7 +19,7 @@ t.setup_venv:
 t.activate:
 	$(call activate_venv)
 
-format:
+t.format:
 	$(call activate_venv) && poetry run black .
 
 t.start:

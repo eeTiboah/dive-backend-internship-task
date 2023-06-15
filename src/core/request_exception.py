@@ -1,6 +1,4 @@
-
-
-class RequestException():
+class RequestException:
     def __init__(self, data=None, errors=None, status_code=None):
         self.data = data
         self.errors = errors or {}

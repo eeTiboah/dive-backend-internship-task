@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, FastAPI, Request, status
 import logging
 from src.core.request_exception import RequestException
@@ -14,10 +13,10 @@ app = FastAPI()
 
 logging.basicConfig(level=logging.INFO)
 
+
 @app.get("/")
 def index():
     return {"message": "Welcome to Calorie Intake Tracker API"}
-
 
 
 @app.exception_handler(RequestValidationError)
@@ -32,6 +31,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=res.to_dict(),
     )
+
 
 async def http_exception_handler(request: Request, exc: ErrorResponse):
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())

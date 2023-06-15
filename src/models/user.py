@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict
 from src.db.models import Role
@@ -21,6 +20,7 @@ class UserRes(BaseModel):
     role: Optional[Role]
     expected_calories: int
 
+
 class UserResponse(BaseModel):
     data: UserRes = Field(...)
     errors: list = Field(...)
@@ -34,6 +34,7 @@ class UserPaginate(BaseModel):
     total_pages: int = Field(...)
     users_response: List[UserRes] = Field(...)
     links: Optional[Dict[str, Optional[str]]]
+
 
 class UserPaginatedResponse(BaseModel):
     data: UserPaginate = Field(...)
@@ -53,15 +54,18 @@ class UserUpdate(BaseModel):
     role: Optional[Role]
     expected_calories: Optional[int]
 
+
 class UserUpdateResponse(BaseModel):
     data: UserUpdate = Field(...)
     errors: list = Field(...)
     status_code: int = Field(...)
 
+
 class Token(BaseModel):
     token: str = Field(...)
     token_type: str = Field(...)
     exp: float = Field(...)
+
 
 class TokenResponse(BaseModel):
     data: Token = Field(...)
@@ -72,6 +76,7 @@ class TokenResponse(BaseModel):
 class TokenData(BaseModel):
     id: Optional[str] = Field(default=None)
 
+
 class UserUpdate(BaseModel):
     email: Optional[EmailStr]
     first_name: Optional[str]
@@ -79,4 +84,3 @@ class UserUpdate(BaseModel):
     updated_at: datetime.datetime = Field(...)
     role: Optional[Role]
     expected_calories: Optional[int]
-

@@ -3,7 +3,15 @@ from src.core.exceptions import ErrorResponse
 from src.service.nutrixion import get_nutrition_data
 from src.db.database import get_db
 from sqlalchemy.orm import Session
-from src.models.calories import Calorie, CalorieEntry, CalorieInput, CaloriePaginate, CaloriePaginatedResponse, CalorieResponse, CalorieUpdateInput
+from src.models.calories import (
+    Calorie,
+    CalorieEntry,
+    CalorieInput,
+    CaloriePaginate,
+    CaloriePaginatedResponse,
+    CalorieResponse,
+    CalorieUpdateInput,
+)
 from src.utils.oauth2 import get_current_user
 from sqlalchemy import desc
 from src.db import models
@@ -25,10 +33,10 @@ allow_operation = RoleChecker(["user", "admin"])
 
 
 @calorie_router.get(
-    "/", 
-    status_code=status.HTTP_200_OK, 
+    "/",
+    status_code=status.HTTP_200_OK,
     response_model=CaloriePaginatedResponse,
-    dependencies=[Depends(allow_operation)]
+    dependencies=[Depends(allow_operation)],
 )
 def get_calories(
     limit: int = Query(default=10, ge=1, le=100),
@@ -112,16 +120,14 @@ def get_calories(
         links=links,
     )
 
-    return CaloriePaginatedResponse(
-        data=response, errors=[], status_code=200
-    )
+    return CaloriePaginatedResponse(data=response, errors=[], status_code=200)
 
 
 @calorie_router.get(
-    "/{calorie_id}", 
-    status_code=status.HTTP_200_OK, 
+    "/{calorie_id}",
+    status_code=status.HTTP_200_OK,
     response_model=CalorieResponse,
-    dependencies=[Depends(allow_operation)]
+    dependencies=[Depends(allow_operation)],
 )
 def get_calorie(
     calorie_id: int,
@@ -153,18 +159,14 @@ def get_calorie(
         number_of_calories=return_data.number_of_calories,
         is_below_expected=return_data.is_below_expected,
     )
-    return CalorieResponse(
-       data=response,
-       errors=[],
-       status_code=200
-    )
+    return CalorieResponse(data=response, errors=[], status_code=200)
 
 
 @calorie_router.post(
-    "/", 
-    status_code=status.HTTP_201_CREATED, 
+    "/",
+    status_code=status.HTTP_201_CREATED,
     response_model=CalorieResponse,
-    dependencies=[Depends(allow_operation)]
+    dependencies=[Depends(allow_operation)],
 )
 def create_calorie(
     calorie_entry: CalorieEntry,
@@ -216,18 +218,14 @@ def create_calorie(
         is_below_expected=new_calorie_entry.is_below_expected,
     )
 
-    return CalorieResponse(
-        data=response,
-        errors=[],
-        status_code=201
-    )
+    return CalorieResponse(data=response, errors=[], status_code=201)
 
 
 @calorie_router.patch(
-    "/{calorie_id}", 
-    status_code=status.HTTP_200_OK, 
+    "/{calorie_id}",
+    status_code=status.HTTP_200_OK,
     response_model=CalorieResponse,
-    dependencies=[Depends(allow_operation)]
+    dependencies=[Depends(allow_operation)],
 )
 def update_calorie(
     calorie_id: int,
@@ -251,9 +249,12 @@ def update_calorie(
 
     return calorie
 
-@calorie_router.delete("/{calorie_id}", 
-                       status_code=status.HTTP_204_NO_CONTENT,
-                       dependencies=[Depends(allow_operation)])
+
+@calorie_router.delete(
+    "/{calorie_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(allow_operation)],
+)
 def delete_calorie(
     calorie_id: int,
     db: Session = Depends(get_db),

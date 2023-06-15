@@ -1,4 +1,3 @@
-
 from src.core.configvars import env_config
 import httpx
 import json

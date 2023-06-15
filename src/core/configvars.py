@@ -1,4 +1,3 @@
-
 from pydantic import BaseSettings
 
 
@@ -25,7 +24,6 @@ class EnvConfig(BaseSettings):
         "NOT_PERMITTED": "You are not permitted to perform this operation",
         "ENTRY_NOT_RETRIEVED": "Could not retrieve number of calories. Enter it or write a new text",
     }
-    
 
     class Config:
         env_file = ".env"

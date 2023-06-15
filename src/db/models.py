@@ -1,4 +1,3 @@
-
 from src.db.database import Base
 from sqlalchemy import (
     Column,
@@ -34,7 +33,10 @@ class User(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     expected_calories = Column(Integer, nullable=False, server_default="1000")
     calorie_entries = relationship(
-        "CalorieEntry", cascade="all,delete", back_populates="user", passive_deletes=True
+        "CalorieEntry",
+        cascade="all,delete",
+        back_populates="user",
+        passive_deletes=True,
     )
 
 

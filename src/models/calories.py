@@ -1,7 +1,7 @@
-
 from pydantic import BaseModel, Field
 import datetime
 from typing import Optional, List, Dict
+
 
 class Calorie(BaseModel):
     date: datetime.date = Field(...)
@@ -9,6 +9,7 @@ class Calorie(BaseModel):
     text: str = Field(...)
     number_of_calories: int = Field(...)
     is_below_expected: bool = Field(...)
+
 
 class CalorieResponse(BaseModel):
     data: Calorie = Field(...)
@@ -46,8 +47,8 @@ class CaloriePaginate(BaseModel):
     calorie_entries: List[Calorie] = Field(...)
     links: Optional[Dict[str, Optional[str]]]
 
+
 class CaloriePaginatedResponse(BaseModel):
     data: CaloriePaginate = Field(...)
     errors: list = Field(...)
     status_code: int = Field(...)
-

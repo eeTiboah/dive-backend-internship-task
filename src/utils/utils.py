@@ -1,4 +1,3 @@
-
 from fastapi import Depends, status
 from passlib.context import CryptContext
 from src.core.exceptions import ErrorResponse
@@ -34,6 +33,7 @@ def verify_password(plain_password, password):
     """
     return pwd_context.verify(plain_password, password)
 
+
 def handle_errors(err):
     """
     Loops through any errors from the err function call and returns them
@@ -49,6 +49,7 @@ def handle_errors(err):
         error_list.append({f"{field}": f"{message}"})
 
     return error_list
+
 
 class RoleChecker:
     """

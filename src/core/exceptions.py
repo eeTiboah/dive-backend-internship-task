@@ -1,5 +1,5 @@
-
 from fastapi import HTTPException, status
+
 
 class ErrorResponse(Exception):
     def __init__(self, status_code=None, data=None, errors=None):

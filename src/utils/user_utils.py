@@ -1,4 +1,3 @@
-
 from sqlalchemy import desc
 from src.db import models
 from src.models.user import (
@@ -7,7 +6,7 @@ from src.models.user import (
     UserResponse,
     UserRes,
     UserUpdate,
-    UserUpdateResponse
+    UserUpdateResponse,
 )
 from src.core.exceptions import ErrorResponse
 from src.db.repository.user import save_user
@@ -37,6 +36,7 @@ def check_for_user(db, user_id):
 
     return user_in_db
 
+
 def check_user_and_role(db, user_id, current_user, msg):
     """
     Checks for the existence and role of a user
@@ -51,7 +51,7 @@ def check_user_and_role(db, user_id, current_user, msg):
 
     if current_user.role.name == "admin":
         return user
-    
+
     elif current_user.id == first_user.id:
         return user
 
@@ -60,13 +60,14 @@ def check_user_and_role(db, user_id, current_user, msg):
             return user
         else:
             raise ErrorResponse(
-                    data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
-                )
+                data=[],
+                errors=[{"message": msg}],
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
     else:
         raise ErrorResponse(
-                    data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
-                )
-
+            data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
+        )
 
 
 def create_new_user(user, db):
@@ -100,13 +101,16 @@ def create_new_user(user, db):
 
     new_user = save_user(user, db)
 
-    data = UserRes(email=new_user.email, 
-                   first_name=new_user.first_name, 
-                   last_name=new_user.last_name, 
-                   role=new_user.role, 
-                   expected_calories=new_user.expected_calories)
+    data = UserRes(
+        email=new_user.email,
+        first_name=new_user.first_name,
+        last_name=new_user.last_name,
+        role=new_user.role,
+        expected_calories=new_user.expected_calories,
+    )
 
     return UserResponse(data=data, errors=[], status_code=201)
+
 
 def get_all_users(db, page, limit):
     """
@@ -165,9 +169,8 @@ def get_all_users(db, page, limit):
         size=limit,
     )
 
-    return UserPaginatedResponse(
-        data=response, errors=[], status_code=200
-    )
+    return UserPaginatedResponse(data=response, errors=[], status_code=200)
+
 
 def get_a_user(db, user_id):
     """
@@ -250,8 +253,12 @@ def delete_existing_user(user_id, db, current_user):
     if current_user.role.name == "manager":
         if user.role.name == "admin" or user.role.name == "manager":
             raise ErrorResponse(
-                    data=[], errors=[{"message": env_config.ERRORS.get("NOT_PERMITTED_DELETE_USER")}], status_code=status.HTTP_403_FORBIDDEN
-                )
+                data=[],
+                errors=[
+                    {"message": env_config.ERRORS.get("NOT_PERMITTED_DELETE_USER")}
+                ],
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
 
     user_in_db.delete()
     db.commit()
