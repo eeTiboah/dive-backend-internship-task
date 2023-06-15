@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dive-backend-engineering-octernship-eetiboah"
+version = "0.1.0"
+description = "A python app for tracking calorie intake"
+authors = ["Emmanuel Tiboah <etiboah@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.97.0"
+uvicorn = "^0.22.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
