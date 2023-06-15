@@ -16,6 +16,14 @@ class EnvConfig(BaseSettings):
         "INVALID_CREDENTIALS": "Invalid Credentials",
         "PASSWORD_MATCH_DETAIL": "Passwords do not match",
         "USER_EXISTS": "User with email already exists",
+        "CALORIE_NOT_FOUND": "Calorie entry not found",
+        "USER_NOT_FOUND": "User not found",
+        "NOT_PERMITTED_UPDATE_CALORIE": "You are not permitted to update this calorie entry",
+        "NOT_PERMITTED_DELETE_CALORIE": "You are not permitted to delete this calorie entry",
+        "NOT_PERMITTED_DELETE_USER": "You are not permitted to delete this user",
+        "NOT_PERMITTED_UPDATE_USER": "You are not permitted to update this user",
+        "NOT_PERMITTED": "You are not permitted to perform this operation",
+        "ENTRY_NOT_RETRIEVED": "Could not retrieve number of calories. Enter it or write a new text",
     }
     
 

@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, Request, status
+from fastapi import APIRouter, FastAPI, Request, status
 import logging
 from src.core.request_exception import RequestException
 from src.core.exceptions import ErrorResponse
