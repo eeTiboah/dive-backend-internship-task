@@ -22,8 +22,17 @@ t.activate:
 t.format:
 	$(call activate_venv) && poetry run black .
 
+lint:
+	$(call activate_venv) && poetry run flake8 .
+
 t.start:
 	uvicorn src.main:app --reload
+
+t.remove:
+	$(call activate_venv) && poetry run autoflake --remove-all-unused-imports --recursive --in-place --exclude=venv,alembic .
+
+t.test:
+	$(call activate_venv) && pytest
 
 t.clean:
 	rm -rf venv

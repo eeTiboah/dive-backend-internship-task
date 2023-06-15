@@ -15,7 +15,6 @@ from src.models.user import (
     UserPaginatedResponse,
     UserResponse,
     TokenResponse,
-    UserUpdate,
     UserUpdateInput,
     UserUpdateResponse,
 )
