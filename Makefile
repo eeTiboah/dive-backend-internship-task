@@ -16,8 +16,11 @@ endef
 t.setup_venv:
 	$(call setup)
 
+t.activate:
+	$(call activate_venv)
+
 t.start:
 	uvicorn src.main:app --reload
 
-clean:
+t.clean:
 	rm -rf venv
