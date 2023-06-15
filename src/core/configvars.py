@@ -12,6 +12,12 @@ class EnvConfig(BaseSettings):
     ADMIN_LAST_NAME: str = "NOT REAL LAST NAME"
     PASSWORD: str = "NOT THE REAL PASSWORD"
     PASSWORD_CONFIRMATION: str = "NOT THE REAL PASSWORD CONFIRMATION"
+    ERRORS: dict = {
+        "INVALID_CREDENTIALS": "Invalid Credentials",
+        "PASSWORD_MATCH_DETAIL": "Passwords do not match",
+        "USER_EXISTS": "User with email already exists",
+    }
+    
 
     class Config:
         env_file = ".env"
