@@ -6,6 +6,7 @@ from src.models.user import (
     UserResponse,
     UserRes,
     UserUpdate,
+    UserUpdateInput,
     UserUpdateResponse,
 )
 from src.core.exceptions import ErrorResponse
@@ -14,9 +15,11 @@ from src.utils.utils import get_password_hash
 from src.core.configvars import env_config
 from fastapi import status
 from datetime import datetime
+from sqlalchemy.orm import Session
+from src.db.models import User
 
 
-def check_for_user(db, user_id):
+def check_for_user(db: Session, user_id: int) -> User:
     """
     Checks for the existence of a user in the database
     Args:
@@ -37,7 +40,9 @@ def check_for_user(db, user_id):
     return user_in_db
 
 
-def check_user_and_role(db, user_id, current_user, msg):
+def check_user_and_role(
+    db: Session, user_id: int, current_user: User, msg: str
+) -> User:
     """
     Checks for the existence and role of a user
     Args:
@@ -70,7 +75,7 @@ def check_user_and_role(db, user_id, current_user, msg):
         )
 
 
-def create_new_user(user, db):
+def create_new_user(user: User, db: Session) -> UserResponse:
     """
     Creates a regular user
     Args:
@@ -112,7 +117,7 @@ def create_new_user(user, db):
     return UserResponse(data=data, errors=[], status_code=201)
 
 
-def get_all_users(db, page, limit):
+def get_all_users(db: Session, page: int, limit: int) -> UserPaginatedResponse:
     """
     Returns all users in the db
     Args:
@@ -172,7 +177,7 @@ def get_all_users(db, page, limit):
     return UserPaginatedResponse(data=response, errors=[], status_code=200)
 
 
-def get_a_user(db, user_id):
+def get_a_user(db: Session, user_id: int) -> UserResponse:
     """
     Returns user with the specified id
     Args:
@@ -195,7 +200,9 @@ def get_a_user(db, user_id):
     return UserResponse(data=returned_user, errors=[], status_code=200)
 
 
-def update_existing_user(user_id, user, db, current_user):
+def update_existing_user(
+    user_id: int, user: UserUpdateInput, db: Session, current_user: User
+) -> UserUpdateResponse:
     """
     Updates a regular user
     Args:
@@ -237,7 +244,7 @@ def update_existing_user(user_id, user, db, current_user):
     return UserUpdateResponse(data=response, errors=[], status_code=200)
 
 
-def delete_existing_user(user_id, db, current_user):
+def delete_existing_user(user_id: int, db: Session, current_user: User) -> None:
     """
     Deletes a regular user
     Args:

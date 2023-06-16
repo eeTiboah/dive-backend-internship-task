@@ -5,6 +5,7 @@ from src.core.configvars import env_config
 from src.utils.oauth2 import get_current_user
 from src.db.models import User
 from typing import List
+from fastapi.exceptions import RequestValidationError
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -34,7 +35,7 @@ def verify_password(plain_password, password):
     return pwd_context.verify(plain_password, password)
 
 
-def handle_errors(err):
+def handle_errors(err: RequestValidationError) -> List:
     """
     Loops through any errors from the err function call and returns them
     Args:

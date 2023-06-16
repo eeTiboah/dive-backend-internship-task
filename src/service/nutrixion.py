@@ -5,7 +5,7 @@ from src.core.exceptions import ErrorResponse
 from fastapi import status
 
 
-def get_nutrition_data(text):
+def get_nutrition_data(text: str) -> int:
     headers = {
         "x-app-id": f"{env_config.NUTRIXION_APP_ID}",
         "x-app-key": f"{env_config.NUTRIXION_APP_KEY}",

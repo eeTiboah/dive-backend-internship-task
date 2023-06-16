@@ -3,11 +3,12 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from src.db.database import get_db
 from src.db import models
-
+from src.db.models import User
 from src.models.user import TokenData
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends
 from src.core.configvars import env_config
+from typing import Tuple
 from src.core.exceptions import CredentialsException
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -16,7 +17,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30
 ALGORITHM = "HS256"
 
 
-def verify_token(token):
+def verify_token(token: str) -> str:
     """
     Verifies if a token is valid
     Raises an exception if the token is invalid
@@ -40,7 +41,7 @@ def verify_token(token):
     return token_data
 
 
-def create_access_token(data: dict, expires_delta: timedelta):
+def create_access_token(data: dict, expires_delta: timedelta) -> Tuple[str, int]:
     """
     Creates an access token to be used by the user
     Args:
@@ -58,7 +59,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
     return encoded_jwt, expire
 
 
-def get_access_token(sub: str):
+def get_access_token(sub: str) -> Tuple[str, int]:
     """
     Returns the created access token
     Args:
@@ -76,7 +77,7 @@ def get_access_token(sub: str):
 
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-):
+) -> User:
     """
     Returns the currently logged-in user
     Args:

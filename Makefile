@@ -22,10 +22,12 @@ t.activate:
 t.format:
 	$(call activate_venv) && poetry run black .
 
-lint:
+t.lint:
 	$(call activate_venv) && poetry run flake8 .
 
 t.start:
+	docker-compose up -d
+	sleep 2
 	uvicorn src.main:app --reload
 
 t.remove:

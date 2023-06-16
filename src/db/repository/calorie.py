@@ -4,7 +4,7 @@ from src.models.calories import Calorie
 from src.db.models import CalorieEntry
 
 
-def create_new_calorie_entry(calorie: Calorie, db: Session):
+def create_new_calorie_entry(calorie: Calorie, db: Session) -> CalorieEntry:
     """
     Creates and stores calorie in database
     Args:

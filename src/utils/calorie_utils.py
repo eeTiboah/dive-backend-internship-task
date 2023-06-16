@@ -1,13 +1,22 @@
 from datetime import datetime
-from src.models.calories import Calorie, CalorieResponse, CalorieUpdate
+from src.models.calories import (
+    Calorie,
+    CalorieResponse,
+    CalorieUpdate,
+    CalorieUpdateInput,
+)
 from src.db import models
 from src.core.configvars import env_config
 from fastapi import status
 from src.core.exceptions import ErrorResponse
 from sqlalchemy import func
+from src.db.models import User, CalorieEntry
+from sqlalchemy.orm import Session
 
 
-def get_total_number_of_calories(db, current_user, date):
+def get_total_number_of_calories(
+    db: Session, current_user: User, date: datetime
+) -> int:
     total_calories_today = (
         db.query(func.coalesce(func.sum(models.CalorieEntry.number_of_calories), 0))
         .filter(
@@ -20,7 +29,9 @@ def get_total_number_of_calories(db, current_user, date):
     return total_calories_today
 
 
-def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
+def check_for_calorie_and_owner(
+    db: Session, calorie_id: int, current_user: User, msg: str
+) -> CalorieEntry:
     """
     Checks if a calorie entry exists and if it belongs to the current user
     Args:
@@ -52,7 +63,9 @@ def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
     return calorie_entry
 
 
-def update_calorie_entry(calorie_id, calorie_entry, db, current_user):
+def update_calorie_entry(
+    calorie_id: int, calorie_entry: CalorieUpdateInput, db: Session, current_user: User
+) -> CalorieResponse:
     """
     Updates a calorie entry
     Args:
@@ -119,7 +132,7 @@ def update_calorie_entry(calorie_id, calorie_entry, db, current_user):
     return CalorieResponse(data=response, errors=[], status_code=200)
 
 
-def delete_calorie_entry(db, calorie_id, current_user):
+def delete_calorie_entry(db: Session, calorie_id: int, current_user) -> None:
     """
     Deletes a calorie entry
     Args:
