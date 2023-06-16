@@ -59,6 +59,7 @@ def test_user(client):
     new_user["data"]["id"] = 1
     return new_user
 
+
 @pytest.fixture
 def test_user_1(client):
     user = {
@@ -75,6 +76,7 @@ def test_user_1(client):
     new_user["data"]["password"] = user.get("password")
     new_user["data"]["id"] = 2
     return new_user
+
 
 @pytest.fixture
 def authorized_user(client, test_user):
