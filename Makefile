@@ -25,9 +25,10 @@ t.format:
 t.lint:
 	$(call activate_venv) && poetry run flake8 .
 
-t.start:
+t.container:
 	docker-compose up -d
-	sleep 2
+
+t.start:
 	uvicorn src.main:app --reload
 
 t.remove:

@@ -24,10 +24,10 @@ jobs:
             pip install flake8 pytest alembic
             if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-        - name: Run migration
+        - name: Run db migration with alembic
           run: alembic upgrade head
 
-        - name: Format
+        - name: Format with black
           uses: psf/black@stable
 
         - name: Lint with flake8
