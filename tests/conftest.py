@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from src.db.database import Base, get_db
 from src.main import app
+from datetime import datetime, time
+from src.db import models
 
 TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -57,6 +59,22 @@ def test_user(client):
     new_user["data"]["id"] = 1
     return new_user
 
+@pytest.fixture
+def test_user_1(client):
+    user = {
+        "email": "arethafranklin@gmail.com",
+        "first_name": "Aretha",
+        "last_name": "Franklin",
+        "password": "secret",
+        "password_confirmation": "secret",
+    }
+    res = client.post("/api/v1/users/register/", json=user)
+
+    assert res.status_code == 201
+    new_user = res.json()
+    new_user["data"]["password"] = user.get("password")
+    new_user["data"]["id"] = 2
+    return new_user
 
 @pytest.fixture
 def authorized_user(client, test_user):
@@ -72,3 +90,99 @@ def authorized_user(client, test_user):
     client.headers = {**client.headers, "Authorization": f"Bearer {token}"}
 
     return client, test_user
+
+
+def return_calorie(entry):
+    return models.CalorieEntry(**entry)
+
+
+@pytest.fixture
+def calorie_entries(test_user, session, test_user_1):
+    date = datetime.now().date()
+    datetime_time = datetime.now().time()
+    time_obj = time(
+        datetime_time.hour,
+        datetime_time.minute,
+        datetime_time.second,
+        datetime_time.microsecond,
+    )
+
+    calories = [
+        {
+            "text": "beef",
+            "id": 1,
+            "is_below_expected": True,
+            "user_id": test_user.get("data").get("id"),
+            "date": date,
+            "time": time_obj,
+            "number_of_calories": 90,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        },
+        {
+            "text": "chicken",
+            "id": 2,
+            "is_below_expected": True,
+            "user_id": test_user_1.get("data").get("id"),
+            "date": date,
+            "time": time_obj,
+            "number_of_calories": 70,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        },
+        {
+            "text": "rice",
+            "id": 3,
+            "is_below_expected": True,
+            "user_id": test_user.get("data").get("id"),
+            "date": date,
+            "time": time_obj,
+            "number_of_calories": 70,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        },
+        {
+            "text": "grape",
+            "id": 4,
+            "is_below_expected": True,
+            "user_id": test_user_1.get("data").get("id"),
+            "date": date,
+            "time": time_obj,
+            "number_of_calories": 150,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        },
+        {
+            "text": "milo",
+            "id": 5,
+            "is_below_expected": False,
+            "user_id": test_user.get("data").get("id"),
+            "date": date,
+            "time": time_obj,
+            "number_of_calories": 660,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        },
+        {
+            "text": "water",
+            "id": 6,
+            "is_below_expected": False,
+            "user_id": test_user_1.get("data").get("id"),
+            "date": date,
+            "time": time_obj,
+            "number_of_calories": 70,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        },
+    ]
+
+    entry = map(return_calorie, calories)
+    calorie_entries = list(entry)
+
+    session.add_all(calorie_entries)
+
+    session.commit()
+
+    saved_entries = session.query(models.CalorieEntry).all()
+
+    return saved_entries
