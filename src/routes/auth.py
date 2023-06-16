@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from src.utils.user_utils import (
+    build_user_query,
     create_new_user,
     delete_existing_user,
     get_a_user,
@@ -8,6 +9,7 @@ from src.utils.user_utils import (
     update_existing_user,
 )
 from src.db import models
+from src.db.models import Role
 from src.db.database import get_db
 from src.models.user import (
     User,
@@ -24,7 +26,7 @@ from src.utils.oauth2 import get_access_token, get_current_user
 from src.core.exceptions import ErrorResponse
 from src.core.configvars import env_config
 from src.utils.utils import RoleChecker
-
+from typing import Union
 
 auth_router = APIRouter(tags=["Auth"], prefix="/users")
 allow_operation = RoleChecker(["manager", "admin"])
@@ -137,6 +139,7 @@ def create_user(
     response_model=UserPaginatedResponse,
 )
 def get_users(
+    role: Union[Role, None] = None,
     limit: int = Query(default=10, ge=1, le=100),
     page: int = Query(default=1, ge=1),
     db: Session = Depends(get_db),
@@ -153,7 +156,9 @@ def get_users(
 
     """
 
-    users = get_all_users(db, page, limit)
+    query = build_user_query(db, role)
+
+    users = get_all_users(db, query, page, limit)
     return users
 
 

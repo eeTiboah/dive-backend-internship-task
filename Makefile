@@ -5,8 +5,7 @@ define setup
 	python3 -m venv venv \
 	&& source ./venv/bin/activate \
 	&& pip install poetry \
-	&& poetry install \
-	&& source venv/bin/activate
+	&& poetry install
 endef
 
 define activate_venv

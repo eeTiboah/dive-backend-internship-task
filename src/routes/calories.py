@@ -24,7 +24,9 @@ from src.utils.calorie_utils import (
     delete_calorie_entry,
     get_total_number_of_calories,
     update_calorie_entry,
+    build_calorie_query,
 )
+from typing import Union
 
 calorie_router = APIRouter(tags=["Calorie"], prefix="/calories")
 
@@ -39,6 +41,10 @@ allow_operation = RoleChecker(["user", "admin"])
     dependencies=[Depends(allow_operation)],
 )
 def get_calories(
+    number_of_calories: Union[int, None] = None,
+    is_below_expected: Union[bool, None] = None,
+    date: str = None,
+    text: Union[str, None] = None,
     limit: int = Query(default=10, ge=1, le=100),
     page: int = Query(default=1, ge=1),
     current_user=Depends(get_current_user),
@@ -49,12 +55,14 @@ def get_calories(
     Query Parameters:
         current_user: The current user object
         db: Database session
-        limit: The number of items to display in a page
+        limit: The number of items to display in a page`
         page: The page number
 
     Return: All calorie entries
 
     """
+
+    query = build_calorie_query(db, is_below_expected, text, number_of_calories, date)
 
     calorie_entries = None
     total_calorie_entries = 0
@@ -62,23 +70,19 @@ def get_calories(
     offset = (page - 1) * limit
 
     if current_user.role.name == "admin":
-        total_calorie_entries = db.query(models.CalorieEntry).count()
+        total_calorie_entries = query.count()
         calorie_entries = (
-            db.query(models.CalorieEntry)
-            .order_by(desc(models.CalorieEntry.created_at))
+            query.order_by(desc(models.CalorieEntry.created_at))
             .offset(offset)
             .limit(limit)
             .all()
         )
     else:
-        total_calorie_entries = (
-            db.query(models.CalorieEntry)
-            .filter(models.CalorieEntry.user_id == current_user.id)
-            .count()
-        )
+        total_calorie_entries = query.filter(
+            models.CalorieEntry.user_id == current_user.id
+        ).count()
         calorie_entries = (
-            db.query(models.CalorieEntry)
-            .filter(models.CalorieEntry.user_id == current_user.id)
+            query.filter(models.CalorieEntry.user_id == current_user.id)
             .order_by(desc(models.CalorieEntry.created_at))
             .offset(offset)
             .limit(limit)

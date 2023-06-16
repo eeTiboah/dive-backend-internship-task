@@ -3,50 +3,39 @@ from src.core.request_exception import RequestException
 from src.core.exceptions import ErrorResponse
 from src.routes.auth import auth_router
 from src.routes.calories import calorie_router
-from src.db import models
-from src.models.user import User
-from src.core.configvars import env_config
-from src.db.models import Role
-from src.utils.user_utils import create_new_user
-from contextlib import asynccontextmanager
-from src.db.database import SessionLocal
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from alembic import command
-from alembic.config import Config
-from src.db.database import engine
-from sqlalchemy import inspect
 import logging
 
 from src.utils.utils import handle_errors
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    inspector = inspect(engine)
-    tables = inspector.get_table_names()
-    check_tables = bool(tables)
-    if not check_tables:
-        alembic_cfg = Config("alembic.ini")
-        command.upgrade(alembic_cfg, "head")
-    db = SessionLocal()
-    try:
-        admin = User(
-            email=env_config.ADMIN_EMAIL,
-            first_name=env_config.ADMIN_FIRST_NAME,
-            last_name=env_config.ADMIN_LAST_NAME,
-            password=env_config.PASSWORD,
-            password_confirmation=env_config.PASSWORD_CONFIRMATION,
-            role=Role.admin.name,
-        )
-        user = db.query(models.User).filter_by(role="admin").first()
-        if not user:
-            create_new_user(admin, db)
-    finally:
-        db.close()
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     inspector = inspect(engine)
+#     tables = inspector.get_table_names()
+#     check_tables = bool(tables)
+#     if not check_tables:
+#         alembic_cfg = Config("alembic.ini")
+#         command.upgrade(alembic_cfg, "head")
+#     db = SessionLocal()
+#     try:
+#         admin = User(
+#             email=env_config.ADMIN_EMAIL,
+#             first_name=env_config.ADMIN_FIRST_NAME,
+#             last_name=env_config.ADMIN_LAST_NAME,
+#             password=env_config.PASSWORD,
+#             password_confirmation=env_config.PASSWORD_CONFIRMATION,
+#             role=Role.admin.name,
+#         )
+#         user = db.query(models.User).filter_by(role="admin").first()
+#         if not user:
+#             create_new_user(admin, db)
+#     finally:
+#         db.close()
 
-    yield
-    db.close()
+#     yield
+#     db.close()
 
 
 app = FastAPI()

@@ -19,6 +19,15 @@ from sqlalchemy.orm import Session
 from src.db.models import User
 
 
+def build_user_query(db, role):
+    query = db.query(models.User)
+
+    if role is not None:
+        query = query.filter(models.User.role == role)
+
+    return query
+
+
 def check_for_user(db: Session, user_id: int) -> User:
     """
     Checks for the existence of a user in the database
@@ -117,7 +126,7 @@ def create_new_user(user: User, db: Session) -> UserResponse:
     return UserResponse(data=data, errors=[], status_code=201)
 
 
-def get_all_users(db: Session, page: int, limit: int) -> UserPaginatedResponse:
+def get_all_users(db: Session, query, page: int, limit: int) -> UserPaginatedResponse:
     """
     Returns all users in the db
     Args:
@@ -129,15 +138,11 @@ def get_all_users(db: Session, page: int, limit: int) -> UserPaginatedResponse:
 
     user_link = "/api/v1/users"
 
-    total_users = db.query(models.User).count()
+    total_users = query.count()
     pages = (total_users - 1) // limit + 1
     offset = (page - 1) * limit
     users = (
-        db.query(models.User)
-        .order_by(desc(models.User.created_at))
-        .offset(offset)
-        .limit(limit)
-        .all()
+        query.order_by(desc(models.User.created_at)).offset(offset).limit(limit).all()
     )
 
     users_response = [

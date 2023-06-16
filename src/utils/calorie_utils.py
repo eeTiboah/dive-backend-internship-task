@@ -14,6 +14,23 @@ from src.db.models import User, CalorieEntry
 from sqlalchemy.orm import Session
 
 
+def build_calorie_query(db, is_below_expected, text, number_of_calories, date):
+    query = db.query(models.CalorieEntry)
+
+    if is_below_expected is not None:
+        query = query.filter(models.CalorieEntry.is_below_expected == is_below_expected)
+    if text is not None:
+        query = query.filter(models.CalorieEntry.text == text)
+    if number_of_calories is not None:
+        query = query.filter(
+            models.CalorieEntry.number_of_calories == number_of_calories
+        )
+    if date is not None:
+        query = query.filter(models.CalorieEntry.date == date)
+
+    return query
+
+
 def get_total_number_of_calories(
     db: Session, current_user: User, date: datetime
 ) -> int:
