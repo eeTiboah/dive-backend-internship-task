@@ -25,7 +25,7 @@ from src.utils.utils import handle_errors
 async def lifespan(app: FastAPI):
     inspector = inspect(engine)
     tables = inspector.get_table_names()
-    check_tables =  bool(tables)
+    check_tables = bool(tables)
     if not check_tables:
         alembic_cfg = Config("alembic.ini")
         command.upgrade(alembic_cfg, "head")
@@ -47,6 +47,7 @@ async def lifespan(app: FastAPI):
 
     yield
     db.close()
+
 
 app = FastAPI()
 
