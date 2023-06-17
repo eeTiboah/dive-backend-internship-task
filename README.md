@@ -1,48 +1,54 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/085htE_I)
-## ![Dive logo](https://user-images.githubusercontent.com/424487/219708981-f0416526-ba48-4b01-b5b3-c0eb73362718.png) Dive 
-<!-- ![Company Logo](https://example.org) -->
 
-| Octernship info  | Timelines and Stipend |
-| ------------- | ------------- |
-| Assignment Deadline  | 19th June 2023  |
-| Octernship Duration  | 3rd July 2023 - 3rd October 2023 |
-| Monthly Stipend  | $500 USD  |
+<h3 align="center">CalorieIntake API</h3>
 
-## Assignment
+<div align="center">
+
+</div>
+
+---
+<p align="center"> API for Calorie Intake
+    <br> 
+</p>
+
+## 📝 Table of Contents
+- [About](#about)
+- [Assumptions](#assumptions)
+- [Helpful Resources](#resources)
+- [Tools](#tools)
+
+## About <a name = "about"></a>
+This is a REST API for tracking daily calorie intake. It is built using [these](#built_using) technologies.
 
 
-# Write a REST API for the input of calories in Python
+## Assumptions <a name = "assumptions"></a>
+In building this API, I made a number of assumptions
+- The application has only one admin. This admin is created automatically when the application starts. The admin can create other either a manager or a user
+- When an account is created, a user is given a default expected calories of 1000 per day. The user can then go ahead to change this value
+- To create a manager, the admin adds the manager role when creating the it
+- The number of calories for a text is important. If a user does not enter the number of calories and the api call is also not able to retrieve the number of calories, an exception is raised. The user is then asked to enter the number of calories themselves or they enter a new text
+- The branded list of the nutritionix api call is what is used to obtain the number of calories for a text. Since the branded list can contain a number of values, the first object in the branded list is selected and it's number of calories is used
+- The user is given the chance to update a calorie entry including the number of calories field. If the user updates that, the is_below_expected field is recalculated so we know if we are either below or above the expected calories for the day
+- A dictionary is used to cache the results from the api call to prevent unnecessary requests
+- A user can only be filtered using its role and a calorie entry is filtered using is_below_expected, date, text, and number_of_calories
 
-### Task Instructions
-- API Users must be able to create an account and log in.
-- All API calls must be authenticated.
-- Implement at least three roles with different permission levels: a regular user would only be able to CRUD on their owned records, a user manager would be able to CRUD only users, and an admin would be able to CRUD all records and users.
-- Each entry has a date, time, text, and number of calories.
-- If the number of calories is not provided, the API should connect to a Calories API provider (for example, https://www.nutritionix.com) and try to get the number of calories for the entered meal.
-- User setting – Expected number of calories per day.
-- Each entry should have an extra boolean field set to true if the total for that day is less than the expected number of calories per day, otherwise should be false.
-- The API must be able to return data in the JSON format.
-- The API should provide filter capabilities for all endpoints that return a list of elements, as well should be able to support pagination.
-- Write unit and e2e tests.
-- Use any *Python* web framework
-- Use *SQLite* as the database
 
-### Task Expectations
-- API Design Best Practices
-- Documentation of any assumptions or choices made and why
-- Links as citation to any article / code referred to or used
-- Unit tests covering the core calories logic
-- Appropriate exception handling and error messages
-- Code Quality - remove any unnecessary code, avoid large functions
-- Good commit history - we won’t accept a repo with a single giant commit 🙅‍♀️
+## Helpful Resources <a name = "resources"></a>
+These resources were helpful to me in completing the task
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
+- [SQLAlchemy sum function](https://stackoverflow.com/questions/11830980/sqlalchemy-simple-example-of-sum-average-min-max)
+- [Nutritionix Docs](https://docs.google.com/document/d/1_q-K-ObMTZvO0qUEAxROrN3bwMujwAN25sLHwJzliK0/edit#heading=h.h3vlpu5rgxy0)
+- [Nutritionix API request](https://gist.github.com/mattsilv/6d19997bbdd02cf5337e9d4806b4f464)
+- [Dependency management with poetry](https://realpython.com/dependency-management-python-poetry/)
+- [Custom Exception handling in FastAPI](https://stackoverflow.com/questions/72831952/how-do-i-integrate-custom-exception-handling-with-the-fastapi-exception-handling/72833284#72833284)
 
-### Task submission
-Using the [GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow#following-github-flow) for assignment submission
-1. Creating a new branch 
-2. Raising a Pull Request for submission
-3. Using GitHub Discussions to ask any relevant questions regarding the project
-4. Final submission Checklist:
-- [ ] SUBMISSION.md in the repository / PR, with:
-  - [ ] commands to set up the repo (dependencies etc.)
-  - [ ] commands to run the test suite
-  - [ ] commands to run the API server
+
+## Tools <a name = "tools"></a>
+- [FastAPI](https://fastapi.tiangolo.com/) - Python Framework
+- [SQLite](https://www.sqlite.org/index.html/) - Database
+- [Poetry](https://python-poetry.org/) - Python Package Manager
+- [Docker](https://www.docker.com/) - Containerization
+- [SqlAlchemy](https://www.sqlalchemy.org/) - ORM
+- [Alembic](https://alembic.sqlalchemy.org/en/latest/) - Database Migration
+- [Pytest](https://docs.pytest.org/en/6.2.x/) - Testing Framework
+
+
