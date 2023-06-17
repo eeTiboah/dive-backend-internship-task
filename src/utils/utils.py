@@ -44,10 +44,7 @@ def handle_errors(err: RequestValidationError) -> List:
     Return: List of errors
 
     """
-    error_list = []
-    for error in err():
-        field, message = error.get("loc")[1], error.get("msg")
-        error_list.append({f"{field}": f"{message}"})
+    error_list = [{f"{error.get('loc')[1]}": f"{error.get('msg')}"} for error in err()]
 
     return error_list
 

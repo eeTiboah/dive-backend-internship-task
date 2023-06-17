@@ -17,12 +17,24 @@ from sqlalchemy.orm import Session, query
 def build_calorie_query(
     db: Session, is_below_expected: bool, text: str, number_of_calories: int, date: str
 ) -> query.Query:
+    """
+    Builds the query when filtering
+    Args:
+        db: Database session
+        is_below_expected: The check to see if the entry has a calorie value
+                           greater or less than the user's expected
+        text: The calory text
+        number_of_calories: The number of calories
+        date: The date
+
+    Return: A user query
+    """
     query = db.query(models.CalorieEntry)
 
     if is_below_expected is not None:
         query = query.filter(models.CalorieEntry.is_below_expected == is_below_expected)
     if text is not None:
-        query = query.filter(models.CalorieEntry.text == text)
+        query = query.filter(models.CalorieEntry.text.ilike(f"%{text}%"))
     if number_of_calories is not None:
         query = query.filter(
             models.CalorieEntry.number_of_calories == number_of_calories
@@ -36,6 +48,16 @@ def build_calorie_query(
 def get_total_number_of_calories(
     db: Session, current_user: User, date: datetime
 ) -> int:
+    """
+    Calculates the total calories
+    Args:
+        db: Database session
+        calorie_id: The id of the calorie entry to obtain from db
+        date: The date we are calculating the total calories for
+
+    Return: The total calories for
+
+    """
     total_calories_today = (
         db.query(func.coalesce(func.sum(models.CalorieEntry.number_of_calories), 0))
         .filter(
@@ -58,7 +80,7 @@ def check_for_calorie_and_owner(
         calorie_id: The id of the calorie entry to obtain from db
         current_user: The current user object
 
-    Return: The query object
+    Return: A Calorie Entry model
 
     """
 

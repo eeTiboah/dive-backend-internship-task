@@ -15,11 +15,19 @@ from src.utils.utils import get_password_hash
 from src.core.configvars import env_config
 from fastapi import status
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, query
 from src.db.models import User
 
 
-def build_user_query(db, role):
+def build_user_query(db: Session, role: str) -> query.Query:
+    """
+    Builds the query when filtering
+    Args:
+        db: Database session
+        role: The role to filter by
+
+    Return: A filtered user query
+    """
     query = db.query(models.User)
 
     if role is not None:
@@ -35,7 +43,7 @@ def check_for_user(db: Session, user_id: int) -> User:
         db: Database session
         user_id: The id of the user
 
-    Return: A user query
+    Return: User model
     """
     user_in_db = db.query(models.User).filter(models.User.id == user_id)
     first_user = user_in_db.first()
@@ -126,11 +134,16 @@ def create_new_user(user: User, db: Session) -> UserResponse:
     return UserResponse(data=data, errors=[], status_code=201)
 
 
-def get_all_users(db: Session, query, page: int, limit: int) -> UserPaginatedResponse:
+def get_all_users(
+    db: Session, query: query.Query, page: int, limit: int
+) -> UserPaginatedResponse:
     """
     Returns all users in the db
     Args:
         db: Database session
+        query: The filtered query
+        page: The current page
+        limit: The number of entries in a page
 
     Return: All users
 
@@ -236,15 +249,8 @@ def update_existing_user(
     user_in_db.update(new_update)
     db.commit()
 
-    user = user_in_db.first()
-    response = UserUpdate(
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        updated_at=current_time,
-        role=user.role,
-        expected_calories=user.expected_calories,
-    )
+    user = user_in_db.first().__dict__
+    response = UserUpdate(**user)
 
     return UserUpdateResponse(data=response, errors=[], status_code=200)
 
