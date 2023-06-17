@@ -1613,6 +1613,24 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+name = "pytest-httpx"
+version = "0.22.0"
+description = "Send responses to httpx."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest_httpx-0.22.0-py3-none-any.whl", hash = "sha256:cefb7dcf66a4cb0601b0de05e576cca423b6081f3245e7912a4d84c58fa3eae8"},
+    {file = "pytest_httpx-0.22.0.tar.gz", hash = "sha256:3a82797f3a9a14d51e8c6b7fa97524b68b847ee801109c062e696b4744f4431c"},
+]
+
+[package.dependencies]
+httpx = "==0.24.*"
+pytest = ">=6.0,<8.0"
+
+[package.extras]
+testing = ["pytest-asyncio (==0.20.*)", "pytest-cov (==4.*)"]
+
+[[package]]
 name = "python-dotenv"
 version = "1.0.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -2456,4 +2474,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "e6df9b26a023cc81c2c5279aaae19d4bbd0e2e7c63271cbbe69ae9c5c021bccf"
+content-hash = "756a79b6614be2105d3456f5566ff1174b48d884215c99ce49875379b5198ab0"

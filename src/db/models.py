@@ -33,10 +33,7 @@ class User(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     expected_calories = Column(Integer, nullable=False, server_default="1000")
     calorie_entries = relationship(
-        "CalorieEntry",
-        cascade="all,delete",
-        back_populates="user",
-        passive_deletes=True,
+        "CalorieEntry", backref="user", passive_deletes=True, cascade="all, delete"
     )
 
 
@@ -51,4 +48,3 @@ class CalorieEntry(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    user = relationship("User", back_populates="calorie_entries")

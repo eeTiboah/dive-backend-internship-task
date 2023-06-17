@@ -3,6 +3,7 @@ import httpx
 import json
 from src.core.exceptions import ErrorResponse
 from fastapi import status
+from src.service import calorie_cache
 
 
 def get_nutrition_data(text: str) -> int:
@@ -12,6 +13,9 @@ def get_nutrition_data(text: str) -> int:
     }
     url = f"{env_config.API_URL}?query={text}"
     timeout = httpx.Timeout(None, read=5.0)
+    if calorie_entered := calorie_cache.get_calorie(text):
+        return calorie_entered
+
     resp: httpx.Response = httpx.get(url, headers=headers, timeout=timeout)
     if resp.status_code != 200:
         msg = json.loads(resp.text).get("message")
@@ -33,5 +37,6 @@ def get_nutrition_data(text: str) -> int:
     food = branded[0]
 
     number_of_calories = food.get("nf_calories")
+    calorie_cache.set_calorie(text, number_of_calories)
 
     return number_of_calories

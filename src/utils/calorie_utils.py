@@ -11,10 +11,12 @@ from fastapi import status
 from src.core.exceptions import ErrorResponse
 from sqlalchemy import func
 from src.db.models import User, CalorieEntry
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, query
 
 
-def build_calorie_query(db, is_below_expected, text, number_of_calories, date):
+def build_calorie_query(
+    db: Session, is_below_expected: bool, text: str, number_of_calories: int, date: str
+) -> query.Query:
     query = db.query(models.CalorieEntry)
 
     if is_below_expected is not None:

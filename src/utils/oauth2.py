@@ -27,6 +27,7 @@ def verify_token(token: str) -> str:
     Return: A token data that is the user's email
 
     """
+
     try:
         payload = jwt.decode(token, env_config.SECRET, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
