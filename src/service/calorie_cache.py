@@ -27,7 +27,7 @@ def get_calorie(text: str) -> Optional[dict]:
     return None
 
 
-def set_calorie(text: str, nf_of_calories : int) -> None:
+def set_calorie(text: str, nf_of_calories: int) -> None:
     """
     Sets the value in the cache using the text as key with time and nf_calories as values
     Args:
