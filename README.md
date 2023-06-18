@@ -17,14 +17,14 @@
 - [Tools](#tools)
 
 ## About <a name = "about"></a>
-This is a REST API for tracking daily calorie intake. It is built using [these](#built_using) technologies.
+This is a REST API for tracking daily calorie intake. It is built using [these](#tools) technologies.
 
 
 ## Assumptions <a name = "assumptions"></a>
 In building this API, I made a number of assumptions
 - The application has only one admin. This admin is created automatically when the application starts. The admin can create other either a manager or a user
 - When an account is created, a user is given a default expected calories of 1000 per day. The user can then go ahead to change this value
-- To create a manager, the admin adds the manager role when creating the it
+- To create a manager, the admin adds the manager role when creating the user
 - The number of calories for a text is important. If a user does not enter the number of calories and the api call is also not able to retrieve the number of calories, an exception is raised. The user is then asked to enter the number of calories themselves or they enter a new text
 - The branded list of the nutritionix api call is what is used to obtain the number of calories for a text. Since the branded list can contain a number of values, the first object in the branded list is selected and it's number of calories is used
 - The user is given the chance to update a calorie entry including the number of calories field. If the user updates that, the is_below_expected field is recalculated so we know if we are either below or above the expected calories for the day
@@ -40,6 +40,7 @@ These resources were helpful to me in completing the task
 - [Nutritionix API request](https://gist.github.com/mattsilv/6d19997bbdd02cf5337e9d4806b4f464)
 - [Dependency management with poetry](https://realpython.com/dependency-management-python-poetry/)
 - [Custom Exception handling in FastAPI](https://stackoverflow.com/questions/72831952/how-do-i-integrate-custom-exception-handling-with-the-fastapi-exception-handling/72833284#72833284)
+- [Enforcing Foreign Key support](https://stackoverflow.com/questions/2614984/sqlite-sqlalchemy-how-to-enforce-foreign-keys/7831210#7831210)
 
 
 ## Tools <a name = "tools"></a>
