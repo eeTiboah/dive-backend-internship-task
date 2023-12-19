@@ -1,13 +1,68 @@
-from src.core.exceptions import ErrorResponse
-from src.db import models
-from src.schema.calories import Calorie, CalorieUpdate, CalorieResponse
 from datetime import datetime
-from sqlalchemy import func
+from src.models.calories import (
+    Calorie,
+    CalorieResponse,
+    CalorieUpdate,
+    CalorieUpdateInput,
+)
+from src.db import models
 from src.core.configvars import env_config
 from fastapi import status
+from src.core.exceptions import ErrorResponse
+from sqlalchemy import func, desc, asc
+from src.db.models import User, CalorieEntry
+from sqlalchemy.orm import Session, query
 
 
-def get_total_number_of_calories(db, current_user, date):
+def build_calorie_query(
+    db: Session, is_below_expected: bool, text: str, number_of_calories: int, date: str, order: str
+) -> query.Query:
+    """
+    Builds the query when filtering
+    Args:
+        db: Database session
+        is_below_expected: The check to see if the entry has a calorie value
+                           greater or less than the user's expected
+        text: The calory text
+        number_of_calories: The number of calories
+        date: The date
+
+    Return: A user query
+    """
+    query = db.query(models.CalorieEntry)
+
+    if order == "asc":
+        query = query.filter_by(asc(models.CalorieEntry.created_at))
+    else:
+        query = query.filter_by(desc(models.CalorieEntry.created_at))
+        
+    if is_below_expected is not None:
+        query = query.filter(models.CalorieEntry.is_below_expected == is_below_expected)
+    if text is not None:
+        query = query.filter(models.CalorieEntry.text.ilike(f"%{text}%"))
+    if number_of_calories is not None:
+        query = query.filter(
+            models.CalorieEntry.number_of_calories == number_of_calories
+        )
+    if date is not None:
+        query = query.filter(models.CalorieEntry.date == date)
+
+    return query
+
+
+def get_total_number_of_calories(
+    db: Session, current_user: User, date: datetime
+) -> int:
+    """
+    Calculates the total calories
+    Args:
+        db: Database session
+        calorie_id: The id of the calorie entry to obtain from db
+        date: The date we are calculating the total calories for
+
+    Return: The total calories for
+
+    """
     total_calories_today = (
         db.query(func.coalesce(func.sum(models.CalorieEntry.number_of_calories), 0))
         .filter(
@@ -20,7 +75,9 @@ def get_total_number_of_calories(db, current_user, date):
     return total_calories_today
 
 
-def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
+def check_for_calorie_and_owner(
+    db: Session, calorie_id: int, current_user: User, msg: str
+) -> CalorieEntry:
     """
     Checks if a calorie entry exists and if it belongs to the current user
     Args:
@@ -28,7 +85,7 @@ def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
         calorie_id: The id of the calorie entry to obtain from db
         current_user: The current user object
 
-    Return: The query object
+    Return: A Calorie Entry model
 
     """
 
@@ -52,7 +109,9 @@ def check_for_calorie_and_owner(db, calorie_id, current_user, msg):
     return calorie_entry
 
 
-def update_calorie_entry(calorie_id, calorie_entry, db, current_user):
+def update_calorie_entry(
+    calorie_id: int, calorie_entry: CalorieUpdateInput, db: Session, current_user: User
+) -> CalorieResponse:
     """
     Updates a calorie entry
     Args:
@@ -116,14 +175,10 @@ def update_calorie_entry(calorie_id, calorie_entry, db, current_user):
         is_below_expected=updated_calorie_entry.is_below_expected,
     )
 
-    return CalorieResponse(
-        data=response,
-        errors=[],
-        status_code=200
-    )
+    return CalorieResponse(data=response, errors=[], status_code=200)
 
 
-def delete_calorie_entry(db, calorie_id, current_user):
+def delete_calorie_entry(db: Session, calorie_id: int, current_user) -> None:
     """
     Deletes a calorie entry
     Args:

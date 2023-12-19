@@ -1,36 +1,40 @@
 
 SHELL := /bin/bash
 
+define setup
+	python -m venv venv \
+	&& source ./venv/bin/activate \
+	&& pip install poetry \
+	&& poetry install
+endef
+
 define activate_venv
 	source ./venv/bin/activate
 endef
 
-venv: 
-	python3 -m venv venv \
-	&& source ./venv/bin/activate \
-	&& pip install poetry \
-	&& poetry install \
-	&& source venv/bin/activate
+t.setup_venv:
+	$(call setup)
 
-activate:
+t.activate:
 	$(call activate_venv)
 
-test:
-	$(call activate_venv) && pytest
-
-format:
+t.format:
 	$(call activate_venv) && poetry run black .
 
-lint:
+t.lint:
 	$(call activate_venv) && poetry run flake8 .
 
-remove:
-	$(call activate_venv) && poetry run autoflake --remove-all-unused-imports --recursive --in-place --exclude=venv,alembic .
 
-start:
+t.start:
 	docker-compose up -d
 	sleep 2
 	uvicorn src.main:app --reload
 
-clean:
+t.remove:
+	$(call activate_venv) && poetry run autoflake --remove-all-unused-imports --recursive --in-place --exclude=venv,alembic .
+
+t.test:
+	$(call activate_venv) && pytest
+
+t.clean:
 	rm -rf venv

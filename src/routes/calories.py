@@ -1,60 +1,74 @@
-from fastapi import APIRouter, status, Depends, Query
+from fastapi import APIRouter, status, Query, Depends
 from src.core.exceptions import ErrorResponse
-from src.utils.oauth2 import get_current_user
-from datetime import datetime
-from src.schema.calories import (
-    CalorieEntry,
+from src.service.nutrixion import get_nutrition_data
+from src.db.database import get_db
+from sqlalchemy.orm import Session
+from src.models.calories import (
     Calorie,
+    CalorieEntry,
     CalorieInput,
     CaloriePaginate,
     CaloriePaginatedResponse,
-    CalorieUpdateInput,
     CalorieResponse,
+    CalorieUpdateInput,
 )
-from src.db.repository.calorie import create_new_calorie_entry
-from src.db.database import get_db
-from sqlalchemy.orm import Session
-from src.db import models
-from src.service.nutrixion import get_nutrition_data
+from src.utils.oauth2 import get_current_user
 from sqlalchemy import desc
+from src.db import models
+from src.utils.utils import RoleChecker
+from src.core.configvars import env_config
+from src.db.repository.calorie import create_new_calorie_entry
+from datetime import datetime
 from src.utils.calorie_utils import (
     check_for_calorie_and_owner,
-    update_calorie_entry,
     delete_calorie_entry,
     get_total_number_of_calories,
+    update_calorie_entry,
+    build_calorie_query,
 )
-from src.core.configvars import env_config
-from src.utils.utils import RoleChecker
+from typing import Union
 
 calorie_router = APIRouter(tags=["Calorie"], prefix="/calories")
 
 calorie_link = "/api/v1/calories"
-
 allow_operation = RoleChecker(["user", "admin"])
 
 
 @calorie_router.get(
-    "/", 
-    status_code=status.HTTP_200_OK, 
-    response_model=CaloriePaginatedResponse
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=CaloriePaginatedResponse,
+    dependencies=[Depends(allow_operation)],
 )
 def get_calories(
+    number_of_calories: int = None,
+    is_below_expected: bool = None,
+    date: str = None,
+    order: str = None,
+    text: str = None,
     limit: int = Query(default=10, ge=1, le=100),
     page: int = Query(default=1, ge=1),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Returns all calorie entries that belong to the current user
+    Return all calorie entries that belong to the current user or all entries if current user is admin
     Query Parameters:
         current_user: The current user object
         db: Database session
-        limit: The number of items to display in a page
+        limit: The number of items to display in a page`
         page: The page number
 
     Return: All calorie entries
 
     """
+
+    query = build_calorie_query(db, 
+                                is_below_expected, 
+                                text, 
+                                number_of_calories, 
+                                date,
+                                order)
 
     calorie_entries = None
     total_calorie_entries = 0
@@ -62,24 +76,19 @@ def get_calories(
     offset = (page - 1) * limit
 
     if current_user.role.name == "admin":
-        total_calorie_entries = db.query(models.CalorieEntry).count()
+        total_calorie_entries = query.count()
         calorie_entries = (
-            db.query(models.CalorieEntry)
-            .order_by(desc(models.CalorieEntry.created_at))
+            query
             .offset(offset)
             .limit(limit)
             .all()
         )
     else:
-        total_calorie_entries = (
-            db.query(models.CalorieEntry)
-            .filter(models.CalorieEntry.user_id == current_user.id)
-            .count()
-        )
+        total_calorie_entries = query.filter(
+            models.CalorieEntry.user_id == current_user.id
+        ).count()
         calorie_entries = (
-            db.query(models.CalorieEntry)
-            .filter(models.CalorieEntry.user_id == current_user.id)
-            .order_by(desc(models.CalorieEntry.created_at))
+            query.filter(models.CalorieEntry.user_id == current_user.id)
             .offset(offset)
             .limit(limit)
             .all()
@@ -120,17 +129,16 @@ def get_calories(
         links=links,
     )
 
-    return CaloriePaginatedResponse(
-        data=response, errors=[], status_code=200
-    )
+    return CaloriePaginatedResponse(data=response, errors=[], status_code=200)
 
 
 @calorie_router.get(
-    "/{calorie_id}", 
-    status_code=status.HTTP_200_OK, 
-    response_model=CalorieResponse
+    "/{calorie_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CalorieResponse,
+    dependencies=[Depends(allow_operation)],
 )
-def get_calorie_entry(
+def get_calorie(
     calorie_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -160,17 +168,14 @@ def get_calorie_entry(
         number_of_calories=return_data.number_of_calories,
         is_below_expected=return_data.is_below_expected,
     )
-    return CalorieResponse(
-       data=response,
-       errors=[],
-       status_code=200
-    )
+    return CalorieResponse(data=response, errors=[], status_code=200)
 
 
 @calorie_router.post(
-    "/", 
-    status_code=status.HTTP_201_CREATED, 
-    response_model=CalorieResponse
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CalorieResponse,
+    dependencies=[Depends(allow_operation)],
 )
 def create_calorie(
     calorie_entry: CalorieEntry,
@@ -222,17 +227,14 @@ def create_calorie(
         is_below_expected=new_calorie_entry.is_below_expected,
     )
 
-    return CalorieResponse(
-        data=response,
-        errors=[],
-        status_code=201
-    )
+    return CalorieResponse(data=response, errors=[], status_code=201)
 
 
 @calorie_router.patch(
-    "/{calorie_id}", 
-    status_code=status.HTTP_200_OK, 
-    response_model=CalorieResponse
+    "/{calorie_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CalorieResponse,
+    dependencies=[Depends(allow_operation)],
 )
 def update_calorie(
     calorie_id: int,
@@ -257,7 +259,11 @@ def update_calorie(
     return calorie
 
 
-@calorie_router.delete("/{calorie_id}", status_code=status.HTTP_204_NO_CONTENT)
+@calorie_router.delete(
+    "/{calorie_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(allow_operation)],
+)
 def delete_calorie(
     calorie_id: int,
     db: Session = Depends(get_db),
@@ -278,7 +284,7 @@ def delete_calorie(
 
 
 @calorie_router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_all_calories(
+def delete_calories(
     db: Session = Depends(get_db), current_user=Depends(get_current_user)
 ):
     """
@@ -289,7 +295,6 @@ def delete_all_calories(
     Return: Nothing
 
     """
-    print(current_user.role.name)
 
     if current_user.role.name != "admin":
         raise ErrorResponse(

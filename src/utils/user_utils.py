@@ -1,28 +1,49 @@
+from sqlalchemy import desc
 from src.db import models
-from src.schema.user import (
+from src.models.user import (
     UserPaginate,
-    UserResponse,
-    UserUpdate,
-    UserUpdateResponse,
     UserPaginatedResponse,
-    UserRes
+    UserResponse,
+    UserRes,
+    UserUpdate,
+    UserUpdateInput,
+    UserUpdateResponse,
 )
 from src.core.exceptions import ErrorResponse
-from src.db.repository.user import save_user_in_db
-from datetime import datetime
+from src.db.repository.user import save_user
 from src.utils.utils import get_password_hash
-from sqlalchemy import desc
 from src.core.configvars import env_config
 from fastapi import status
+from datetime import datetime
+from sqlalchemy.orm import Session, query
+from src.db.models import User
 
 
-user_link = "/api/v1/users"
+def build_user_query(db: Session, role: str) -> query.Query:
+    """
+    Builds the query when filtering
+    Args:
+        db: Database session
+        role: The role to filter by
+
+    Return: A filtered user query
+    """
+    query = db.query(models.User)
+
+    if role is not None:
+        query = query.filter(models.User.role == role)
+
+    return query
 
 
-def check_for_user(db, user_id):
+def check_for_user(db: Session, user_id: int) -> User:
     """
     Checks for the existence of a user in the database
-    Raises an error if the user with the id does not exist
+    Args:
+        db: Database session
+        user_id: The id of the user
+
+    Return: User model
     """
     user_in_db = db.query(models.User).filter(models.User.id == user_id)
     first_user = user_in_db.first()
@@ -36,51 +57,105 @@ def check_for_user(db, user_id):
     return user_in_db
 
 
-def check_user_and_role(db, user_id, current_user, msg):
+def check_user_and_role(
+    db: Session, user_id: int, current_user: User, msg: str
+) -> User:
+    """
+    Checks for the existence and role of a user
+    Args:
+        db: Database session
+        user_id: The id of the user
+
+    Return: A user query
+    """
     user = check_for_user(db, user_id)
     first_user = user.first()
-
-    print(current_user.id)
-    print(first_user.id)
 
     if current_user.role.name == "admin":
         return user
 
-    if current_user.role.name == "manager":
-        if first_user.role.name != "user":
-            raise ErrorResponse(
-                data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
-            )
-        else:
-            return user
+    elif current_user.id == first_user.id:
+        return user
 
-    if current_user.id != first_user.id:
+    elif current_user.role.name == "manager":
+        if first_user.role.name == "user":
+            return user
+        else:
+            raise ErrorResponse(
+                data=[],
+                errors=[{"message": msg}],
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+    else:
         raise ErrorResponse(
             data=[], errors=[{"message": msg}], status_code=status.HTTP_403_FORBIDDEN
         )
 
-    return user
 
-
-def get_all_users(db, page, limit):
+def create_new_user(user: User, db: Session) -> UserResponse:
     """
-    Returns all users
+    Creates a regular user
     Args:
+        user: User schema that is accepted in request
         db: Database session
 
-    Return: The users in the db
+    Return: A user
 
     """
 
-    total_users = db.query(models.User).count()
+    user_data = db.query(models.User).filter(models.User.email == user.email).first()
+    if user_data:
+        raise ErrorResponse(
+            data=[],
+            errors=[{"message": env_config.ERRORS.get("USER_EXISTS")}],
+            status_code=status.HTTP_409_CONFLICT,
+        )
+
+    hash_passwd = get_password_hash(user.password)
+    if user.password != user.password_confirmation:
+        raise ErrorResponse(
+            data=[],
+            errors=[{"message": env_config.ERRORS.get("PASSWORD_MATCH_DETAIL")}],
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user.password = hash_passwd
+
+    new_user = save_user(user, db)
+
+    data = UserRes(
+        email=new_user.email,
+        first_name=new_user.first_name,
+        last_name=new_user.last_name,
+        role=new_user.role,
+        expected_calories=new_user.expected_calories,
+    )
+
+    return UserResponse(data=data, errors=[], status_code=201)
+
+
+def get_all_users(
+    db: Session, query: query.Query, page: int, limit: int
+) -> UserPaginatedResponse:
+    """
+    Returns all users in the db
+    Args:
+        db: Database session
+        query: The filtered query
+        page: The current page
+        limit: The number of entries in a page
+
+    Return: All users
+
+    """
+
+    user_link = "/api/v1/users"
+
+    total_users = query.count()
     pages = (total_users - 1) // limit + 1
     offset = (page - 1) * limit
     users = (
-        db.query(models.User)
-        .order_by(desc(models.User.created_at))
-        .offset(offset)
-        .limit(limit)
-        .all()
+        query.order_by(desc(models.User.created_at)).offset(offset).limit(limit).all()
     )
 
     users_response = [
@@ -117,19 +192,17 @@ def get_all_users(db, page, limit):
         size=limit,
     )
 
-    return UserPaginatedResponse(
-        data=response, errors=[], status_code=200
-    )
+    return UserPaginatedResponse(data=response, errors=[], status_code=200)
 
 
-def get_a_user(db, user_id):
+def get_a_user(db: Session, user_id: int) -> UserResponse:
     """
-    Return a user with the specified id
+    Returns user with the specified id
     Args:
         user_id: The id of the user
         db: Database session
 
-    Return: The user in the db
+    Return: A user
 
     """
 
@@ -145,47 +218,9 @@ def get_a_user(db, user_id):
     return UserResponse(data=returned_user, errors=[], status_code=200)
 
 
-def create_new_user(user, db):
-    """
-    Creates a regular user
-    Args:
-        user: User schema that is accepted in request
-        db: Database session
-
-    Return: The newly created user
-
-    """
-
-    user_data = db.query(models.User).filter(models.User.email == user.email).first()
-    if user_data:
-        raise ErrorResponse(
-            data=[],
-            errors=[{"message": env_config.ERRORS.get("USER_EXISTS")}],
-            status_code=status.HTTP_409_CONFLICT,
-        )
-
-    hash_passwd = get_password_hash(user.password)
-    if user.password != user.password_confirmation:
-        raise ErrorResponse(
-            data=[],
-            errors=[{"message": env_config.ERRORS.get("PASSWORD_MATCH_DETAIL")}],
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
-
-    user.password = hash_passwd
-
-    new_user = save_user_in_db(user, db)
-
-    data = UserRes(email=new_user.email, 
-                   first_name=new_user.first_name, 
-                   last_name=new_user.last_name, 
-                   role=new_user.role, 
-                   expected_calories=new_user.expected_calories)
-
-    return UserResponse(data=data, errors=[], status_code=201)
-
-
-def update_existing_user(user_id, user, db, current_user):
+def update_existing_user(
+    user_id: int, user: UserUpdateInput, db: Session, current_user: User
+) -> UserUpdateResponse:
     """
     Updates a regular user
     Args:
@@ -214,20 +249,13 @@ def update_existing_user(user_id, user, db, current_user):
     user_in_db.update(new_update)
     db.commit()
 
-    user = user_in_db.first()
-    response = UserUpdate(
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        updated_at=current_time,
-        role=user.role,
-        expected_calories=user.expected_calories,
-    )
+    user = user_in_db.first().__dict__
+    response = UserUpdate(**user)
 
     return UserUpdateResponse(data=response, errors=[], status_code=200)
 
 
-def delete_existing_user(user_id, db):
+def delete_existing_user(user_id: int, db: Session, current_user: User) -> None:
     """
     Deletes a regular user
     Args:
@@ -239,5 +267,16 @@ def delete_existing_user(user_id, db):
     """
 
     user_in_db = check_for_user(db, user_id)
+    user = user_in_db.first()
+    if current_user.role.name == "manager":
+        if user.role.name == "admin" or user.role.name == "manager":
+            raise ErrorResponse(
+                data=[],
+                errors=[
+                    {"message": env_config.ERRORS.get("NOT_PERMITTED_DELETE_USER")}
+                ],
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
     user_in_db.delete()
     db.commit()

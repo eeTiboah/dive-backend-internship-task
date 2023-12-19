@@ -1,12 +1,11 @@
 
-
 FROM python:3.10-alpine
 
 WORKDIR /code
 
 ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/code/poetry" \
-    POETRY_VERSION=1.2.2
+    POETRY_VERSION=1.5.1
     
 
 ENV PATH="$POETRY_HOME/bin:$PATH"
@@ -21,6 +20,6 @@ RUN poetry install
 
 COPY . /code/
 
-EXPOSE 8080
+EXPOSE 8000
 
-ENTRYPOINT ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0"]
