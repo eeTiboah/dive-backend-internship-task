@@ -1,33 +1,32 @@
 from fastapi import FastAPI, Request, status
-from src.core.response import APIResponse
+from src.core.request_exception import RequestException
 from src.core.exceptions import ErrorResponse
 from src.routes.auth import auth_router
 from src.routes.calories import calorie_router
 from src.db import models
-from src.schema.user import User
+from src.models.user import User
 from src.core.configvars import env_config
 from src.db.models import Role
 from src.utils.user_utils import create_new_user
 from contextlib import asynccontextmanager
-from src.db.database import SessionLocal
+from src.db.database import SessionLocal, Base
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from alembic import command
-from alembic.config import Config
 from src.db.database import engine
 from sqlalchemy import inspect
+import logging
 
-def check_if_table_exist():
-    inspector = inspect(engine)
-    tables = inspector.get_table_names()
-    return bool(tables)
+from src.utils.utils import handle_errors
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if not check_if_table_exist():
-        alembic_cfg = Config("alembic.ini")
-        command.upgrade(alembic_cfg, "head")
     db = SessionLocal()
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+    check_tables = bool(tables)
+    if not check_tables:
+        Base.metadata.create_all(bind=engine)
     try:
         admin = User(
             email=env_config.ADMIN_EMAIL,
@@ -46,14 +45,24 @@ async def lifespan(app: FastAPI):
     yield
     db.close()
 
+
 app = FastAPI(lifespan=lifespan)
+
+
+logging.basicConfig(level=logging.INFO)
+
+
+@app.get("/")
+def index():
+    return {"message": "Welcome to Calorie Intake Tracker API"}
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    res = APIResponse(
+    errors = handle_errors(exc.errors)
+    res = RequestException(
         data=[],
-        errors=[error for error in exc.errors()],
+        errors=errors,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
     return JSONResponse(
@@ -64,11 +73,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 async def http_exception_handler(request: Request, exc: ErrorResponse):
     return JSONResponse(status_code=exc.status_code, content=exc.to_dict())
-
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Calories Input API"}
 
 
 app.add_exception_handler(ErrorResponse, http_exception_handler)

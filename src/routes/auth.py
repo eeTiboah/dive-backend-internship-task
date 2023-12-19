@@ -1,30 +1,32 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from src.utils.user_utils import (
+    build_user_query,
     create_new_user,
+    delete_existing_user,
     get_a_user,
     get_all_users,
     update_existing_user,
-    delete_existing_user,
 )
 from src.db import models
+from src.db.models import Role
 from src.db.database import get_db
-from src.schema.user import (
+from src.models.user import (
     User,
     Token,
     UserPaginatedResponse,
     UserResponse,
-    UserUpdate,
-    UserUpdateResponse,
     TokenResponse,
+    UserUpdateInput,
+    UserUpdateResponse,
 )
 from fastapi.security import OAuth2PasswordRequestForm
 from src.utils.utils import verify_password
 from src.utils.oauth2 import get_access_token, get_current_user
 from src.core.exceptions import ErrorResponse
-from src.utils.utils import RoleChecker
 from src.core.configvars import env_config
-
+from src.utils.utils import RoleChecker
+from typing import Union
 
 auth_router = APIRouter(tags=["Auth"], prefix="/users")
 allow_operation = RoleChecker(["manager", "admin"])
@@ -35,7 +37,7 @@ allow_operation = RoleChecker(["manager", "admin"])
 )
 def signup(user: User, db: Session = Depends(get_db)):
     """
-    Creates a regular user
+    Route that creates a regular user
     Args:
         user: User schema that is accepted in request
         db: Database session
@@ -53,9 +55,9 @@ def signup(user: User, db: Session = Depends(get_db)):
 )
 def login(user: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
-    Creates a token for authorization
+    Route that creates a token for authorization
     Args:
-        user: OAuth2PasswordRequestForm which accepts a username and a password
+        user: Form which accepts a username and a password
         db: Database session
 
     Return: A JWT Token
@@ -98,8 +100,8 @@ def create_user(
     user: User, db: Session = Depends(get_db), current_user=Depends(get_current_user)
 ):
     """
-    Return a newly created user
-    Query parameters:
+    Route used by roles to create users
+    Args:
         user: The user details to create the user
         current_user: The current user object
         db: Database session
@@ -120,9 +122,9 @@ def create_user(
         if user.role and (user.role.name == "admin" or user.role.name == "manager"):
             raise ErrorResponse(
                 data=[],
-                errors=[{
-                    "message": "You are not allowed to create a user with this role"
-                }],
+                errors=[
+                    {"message": "You are not allowed to create a user with this role"}
+                ],
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
@@ -137,22 +139,26 @@ def create_user(
     response_model=UserPaginatedResponse,
 )
 def get_users(
+    role: Union[Role, None] = None,
     limit: int = Query(default=10, ge=1, le=100),
     page: int = Query(default=1, ge=1),
     db: Session = Depends(get_db),
 ):
     """
-    Returns all users in the db
-    Query parameters:
+    Route used by admin role to return all users in the db
+
+    Args:
         db: Database session
         limit: The number of items to display in a page
         page: The page number
 
-    Return: The users in the db
+    Return: All users
 
     """
 
-    users = get_all_users(db, page, limit)
+    query = build_user_query(db, role)
+
+    users = get_all_users(db, query, page, limit)
     return users
 
 
@@ -184,7 +190,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 )
 def update_user(
     user_id: int,
-    user: UserUpdate,
+    user: UserUpdateInput,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -209,7 +215,9 @@ def update_user(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(allow_operation)],
 )
-def delete_a_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
+):
     """
     Deletes a regular user
     Query Parameters:
@@ -220,7 +228,7 @@ def delete_a_user(user_id: int, db: Session = Depends(get_db)):
 
     """
 
-    delete_existing_user(user_id, db)
+    delete_existing_user(user_id, db, current_user)
 
 
 @auth_router.delete(
@@ -228,7 +236,7 @@ def delete_a_user(user_id: int, db: Session = Depends(get_db)):
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(RoleChecker(["admin"]))],
 )
-def delete_user(db: Session = Depends(get_db)):
+def delete_users(db: Session = Depends(get_db)):
     """
     Deletes all users
     Query Parameters:

@@ -83,8 +83,8 @@ def authorized_user(client, test_user):
     res = client.post(
         "/api/v1/users/login",
         data={
-            "username": test_user.get('data').get("email"),
-            "password": test_user.get('data').get("password"),
+            "username": test_user.get("data").get("email"),
+            "password": test_user.get("data").get("password"),
         },
     )
     res_body = res.json()

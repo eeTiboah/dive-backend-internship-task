@@ -1,7 +1,8 @@
 from src.db.models import User
+from sqlalchemy.orm import Session
 
 
-def save_user_in_db(user, db):
+def save_user(user, db: Session) -> User:
     """
     Creates and stores new user in database
     Args:

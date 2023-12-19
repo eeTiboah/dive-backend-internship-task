@@ -4,6 +4,7 @@ from pydantic import BaseSettings
 class EnvConfig(BaseSettings):
     SECRET: str = "NOT THE REAL SECRET"
     NUTRIXION_APP_ID: str = "NOT REAL APP ID"
+    DB_NAME: str = "NOT REAL DB NAME"
     NUTRIXION_APP_KEY: str = "NOT REAL APP KEY"
     API_URL: str = "NOT REAL URL"
     ADMIN_EMAIL: str = "NOT REAL EMAIL"

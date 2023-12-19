@@ -1,3 +1,4 @@
+
 # CalorieTrack
 
 ## Table of Contents
@@ -89,14 +90,3 @@ Run
 ```
 make start
 ```
-#### Without make
-Run
-```
-docker-compose up -d
-```
-Then start CalorieTrack server using the code snippet below
-```
-uvicorn src.main:app --reload
-```
-
-####
