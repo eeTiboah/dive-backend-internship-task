@@ -6,8 +6,8 @@ import datetime
 
 class User(BaseModel):
     email: EmailStr = Field(...)
-    first_name: str = Field(..., min_length=2)
-    last_name: str = Field(..., min_length=2)
+    first_name: str = Field(..., min_length=3)
+    last_name: str = Field(..., min_length=3)
     password: str = Field(..., min_length=5)
     password_confirmation: str = Field(..., min_length=5)
     role: Optional[Role]
