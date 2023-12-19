@@ -9,13 +9,13 @@ from src.db import models
 from src.core.configvars import env_config
 from fastapi import status
 from src.core.exceptions import ErrorResponse
-from sqlalchemy import func
+from sqlalchemy import func, desc, asc
 from src.db.models import User, CalorieEntry
 from sqlalchemy.orm import Session, query
 
 
 def build_calorie_query(
-    db: Session, is_below_expected: bool, text: str, number_of_calories: int, date: str
+    db: Session, is_below_expected: bool, text: str, number_of_calories: int, date: str, order: str
 ) -> query.Query:
     """
     Builds the query when filtering
@@ -31,6 +31,11 @@ def build_calorie_query(
     """
     query = db.query(models.CalorieEntry)
 
+    if order == "asc":
+        query = query.filter_by(asc(models.CalorieEntry.created_at))
+    else:
+        query = query.filter_by(desc(models.CalorieEntry.created_at))
+        
     if is_below_expected is not None:
         query = query.filter(models.CalorieEntry.is_below_expected == is_below_expected)
     if text is not None:

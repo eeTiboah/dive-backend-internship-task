@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 define setup
-	python3 -m venv venv \
+	python -m venv venv \
 	&& source ./venv/bin/activate \
 	&& pip install poetry \
 	&& poetry install

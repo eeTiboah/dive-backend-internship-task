@@ -41,10 +41,11 @@ allow_operation = RoleChecker(["user", "admin"])
     dependencies=[Depends(allow_operation)],
 )
 def get_calories(
-    number_of_calories: Union[int, None] = None,
-    is_below_expected: Union[bool, None] = None,
+    number_of_calories: int = None,
+    is_below_expected: bool = None,
     date: str = None,
-    text: Union[str, None] = None,
+    order: str = None,
+    text: str = None,
     limit: int = Query(default=10, ge=1, le=100),
     page: int = Query(default=1, ge=1),
     current_user=Depends(get_current_user),
@@ -62,7 +63,12 @@ def get_calories(
 
     """
 
-    query = build_calorie_query(db, is_below_expected, text, number_of_calories, date)
+    query = build_calorie_query(db, 
+                                is_below_expected, 
+                                text, 
+                                number_of_calories, 
+                                date,
+                                order)
 
     calorie_entries = None
     total_calorie_entries = 0
@@ -72,7 +78,7 @@ def get_calories(
     if current_user.role.name == "admin":
         total_calorie_entries = query.count()
         calorie_entries = (
-            query.order_by(desc(models.CalorieEntry.created_at))
+            query
             .offset(offset)
             .limit(limit)
             .all()
@@ -83,7 +89,6 @@ def get_calories(
         ).count()
         calorie_entries = (
             query.filter(models.CalorieEntry.user_id == current_user.id)
-            .order_by(desc(models.CalorieEntry.created_at))
             .offset(offset)
             .limit(limit)
             .all()
